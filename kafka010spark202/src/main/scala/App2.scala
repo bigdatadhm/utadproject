@@ -76,7 +76,8 @@ object App2 {
         }.toDF()
 
         viajesDF.show()
-        viajesDF.write.mode(SaveMode.Append).parquet("/tmp/parquet")
+        //viajesDF.write.mode(SaveMode.Append).parquet("/tmp/parquet")
+        viajesDF.write.mode(SaveMode.Append).parquet("hdfs://sparknode01.localdomain:9000/user/dhm/")
       })
 
       streamingContext.start()             // Start the computation
