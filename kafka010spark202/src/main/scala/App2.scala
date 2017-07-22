@@ -19,15 +19,31 @@ import org.apache.spark.streaming.kafka010.LocationStrategies.PreferConsistent
 import org.apache.spark.streaming.kafka010.ConsumerStrategies.Subscribe
 
 
+//imports por la parte de Cassandra
+
+import com.datastax.driver.core.Cluster
+import com.datastax.driver.core.ResultSet
+import com.datastax.driver.core.Row
+import com.datastax.driver.core.Statement
+import java.net.URISyntaxException
+import java.util
+
 import org.apache.log4j.{Level, Logger}
 
+object Lanzador{
+  def main(args: Array[String]) {
+    App2("127.0.0.1")
+  }
+}
 
-object App2 {
+class  App2 (cassNodes: String) {
 
+  //esta aplicación recibe como primer parámetro un string con los nodos de Cassandra
+  //ejemplo "127.0.0.1"
     def main(args: Array[String]) {
 
-
-
+      //val cassNodes= args(0)
+val cassNodes = "127.0.0.1"
       // Reducimos el nivel del logger
       val rootLogger = Logger.getRootLogger()
       rootLogger.setLevel(Level.ERROR)
@@ -54,6 +70,14 @@ object App2 {
         PreferConsistent,
         Subscribe[String, String](topics, kafkaParams)
       )
+
+      val cassCluster = Cluster.builder().addContactPoint(cassNodes).build()
+      val cassSession = cassCluster.connect()
+
+      println(s"Connected to cluster: ${cassCluster.getMetadata.getClusterName}")
+
+
+
 
 //      val rowStream =stream.map(record => (record.key, record.value))
       val rowStream =stream.map(record => (record.value))
