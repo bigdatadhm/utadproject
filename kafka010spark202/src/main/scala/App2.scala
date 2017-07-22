@@ -40,6 +40,15 @@ import org.joda.time.format.DateTimeFormatter
 
 import org.apache.log4j.{Level, Logger}
 
+object Inicializa{
+
+  def main(args: Array[String]) {
+    val rootLogger = Logger.getRootLogger
+    rootLogger.setLevel(Level.ERROR)
+
+    val bj= new App2("127.0.0.1",9042,"localhost:9092","miGrupo","datosTaxis","hdfs://localhost:9000/user/dhm/")
+  }
+}
 object Lanzador{
 
   def main(args: Array[String]) {
@@ -62,7 +71,7 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     private val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
 
-    val streamingContext = new StreamingContext(conf, Seconds(6))
+    val streamingContext = new StreamingContext(conf, Seconds(60))
 
     val kafkaParams = Map[String, Object](
       "bootstrap.servers" -> kfkServers,
@@ -96,13 +105,14 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
   //formato a probar 2017-07-19 09:55:42+0000
   val now = new DateTime
-  val pattern = "yyyy-mm-dd HH:mm:ssZ"
+  val pattern = "yyyy-MM-dd HH:mm:ssZ"
   val formatter: DateTimeFormatter = DateTimeFormat.forPattern(pattern)
   val formatted: String = formatter.print(now)
   System.out.println(formatted)
 
 
   val miTimestamp = new java.sql.Timestamp(date.getTime)
+  System.out.println(miTimestamp)
 
   rowStream.foreachRDD((rdd: RDD[String]) => {
 
@@ -183,8 +193,6 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
       .mode(SaveMode.Append).save()
 
     println("hemos escrito en en cassandra el viajesAggF")
-    println("hemos escrito en en cassandra el viajesAggF")
-    println("hemos escrito en en cassandra el viajesAggF")
 
     //val viajesAggDateDF = viajesAggDF.withColumn(col(date.toString), "datetime")
     //val viajesAggDateDF = viajesAggDF.withColumn("datetime",expr("date.toString()"))
@@ -198,8 +206,6 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
 
     })
-
-  println("salimos del foreachRDD")
 
   cassCluster.close()
     streamingContext.start() // Start the computation
