@@ -1,6 +1,7 @@
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 
+
 object SparkSessionSingleton {
 
   @transient private var instance: SparkSession = _
@@ -15,6 +16,7 @@ object SparkSessionSingleton {
     instance
   }
 }
+
 case class  yellowSchema (
                            vendor_id: String,
                            tpep_pickup_datetime: String,
@@ -36,3 +38,4 @@ case class  yellowSchema (
                            improvement_surcharge: Double,
                            total_amount: Double
                          )
+
