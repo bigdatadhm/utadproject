@@ -32,11 +32,6 @@ import org.apache.log4j.{Level, Logger}
 
 object Lanzador{
 
-  //esta aplicación recibe como primer parámetro un string con los nodos de Cassandra
-  //como segundo parámetro el puerto de Cassandra
-  //como tercer parámetro el bootstrap.servers de kafka
-  //como quinto el topic al que se suscribe
-  //como sexto el hdfs de destino de parquet "hdfs://localhost:9000/user/dhm/"
   def main(args: Array[String]) {
     val rootLogger = Logger.getRootLogger
     rootLogger.setLevel(Level.ERROR)
@@ -48,15 +43,19 @@ object Lanzador{
 //class  App2(cassNodes: String) {
 class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: String, kfkTopics: String,  parquetDest: String) {
 
-    //val cassNodes= args(0)
-    //val cassNodes = "127.0.0.1"
+  //esta aplicación recibe como primer parámetro un string con los nodos de Cassandra
+  //como segundo parámetro el puerto de Cassandra
+  //como tercer parámetro el bootstrap.servers de kafka
+  //como quinto el topic al que se suscribe
+  //como sexto el hdfs de destino de parquet "hdfs://localhost:9000/user/dhm/"
+
+
     // Reducimos el nivel del logger
-    val rootLogger = Logger.getRootLogger
+    private val rootLogger = Logger.getRootLogger
     rootLogger.setLevel(Level.ERROR)
 
 
-    val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
-    //      val sparkContext = new SparkContext(conf)
+    private val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
 
     val streamingContext = new StreamingContext(conf, Seconds(10))
 
