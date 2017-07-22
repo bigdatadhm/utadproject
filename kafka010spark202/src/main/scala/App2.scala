@@ -5,6 +5,8 @@ import org.apache.spark.SparkContext
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{SQLContext, SaveMode, SparkSession}
+import org.apache.spark.sql._
+
 
 //imports por la parte de spark streaming
 
@@ -28,6 +30,13 @@ import com.datastax.driver.core.Row
 import com.datastax.driver.core.Statement
 import java.net.URISyntaxException
 import java.util
+
+
+import org.joda.time.DateTime
+import org.joda.time.format.DateTimeFormat
+import org.joda.time.format.DateTimeFormatter
+
+
 
 import org.apache.log4j.{Level, Logger}
 
@@ -53,7 +62,7 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     private val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
 
-    val streamingContext = new StreamingContext(conf, Seconds(10))
+    val streamingContext = new StreamingContext(conf, Seconds(6))
 
     val kafkaParams = Map[String, Object](
       "bootstrap.servers" -> kfkServers,
@@ -85,6 +94,16 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
   val date = new java.util.Date
 
+  //formato a probar 2017-07-19 09:55:42+0000
+  val now = new DateTime
+  val pattern = "yyyy-mm-dd HH:mm:ssZ"
+  val formatter: DateTimeFormatter = DateTimeFormat.forPattern(pattern)
+  val formatted: String = formatter.print(now)
+  System.out.println(formatted)
+
+
+  val miTimestamp = new java.sql.Timestamp(date.getTime)
+
   rowStream.foreachRDD((rdd: RDD[String]) => {
 
       val sparkContext = SparkSessionSingleton.getInstance(rdd.sparkContext.getConf)
@@ -103,8 +122,19 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
       }.toDF()
 
       //viajesDF.show()
-    val viajesDateDF = viajesDF.withColumn("datetime", expr("'"+date.toString+"'"))
+     // val viajesDateDF = viajesDF.withColumn("trip_date",to_date(formatted.toString))
+    println("vamos a agregar la columna con timestamp")
+
+    val viajesDateDF = viajesDF.withColumn("trip_date",current_timestamp() )
+
+    println("hemos agregado la columna con timestamp")
+
+    //val viajesDateDF = viajesDF.withColumn("trip_date",to_date()expr("'"+formatted+"'"))
+    viajesDateDF.schema.printTreeString()
+    //miTimestamp
       //viajesDF.write.mode(SaveMode.Append).parquet("/tmp/parquet")
+
+    println("vamos a escribir en parquet el viajesDateDF")
       viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
 
     println("vamos a mostrar el viajesDateDf")
@@ -114,14 +144,14 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     //Calculamos los agregados para persistirlos en cassandra
 
-      println("ahora el agg")
+      println("ahora hacemos el agregado")
 
       //val viajesAggDF=viajesDF.groupBy("vendor_id", "payment_type").sum("passenger_count as ")
 
 
-      val viajesAggDF=viajesDateDF.groupBy("datetime", "vendor_id", "payment_type")
+      val viajesAggDF=viajesDateDF.groupBy("trip_date", "vendor_id", "payment_type")
         .agg(
-          //expr("'"+date.toString+"' as datetime") -- funciona, pero la fecha hay que ponerla antes (parquet)
+          //expr("'"+date.toString+"' as trip_date") -- funciona, pero la fecha hay que ponerla antes (parquet)
           expr("sum(passenger_count) as sum_passenger_count"),
           expr("max(passenger_count) as max_passenger_count"),
           expr("avg(passenger_count) as avg_passenger_count"),
@@ -140,6 +170,21 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
           expr("count(*) as count_trips")
         )
     viajesAggDF.show()
+    //viajesAggDF.save("org.apache.spark.sql.cassandra",SaveMode.Overwrite,options = Map( "c_table" -> "test1", "keyspace" -> "yana_test"))
+
+    println("hemos mostrado el agregado")
+
+
+    println("vamos a escribir en en cassandra el viajesAggF")
+
+    viajesAggDF
+      .write.format("org.apache.spark.sql.cassandra")
+      .options(Map( "table" -> "olaptaxis", "keyspace" ->"utadproject"))
+      .mode(SaveMode.Append).save()
+
+    println("hemos escrito en en cassandra el viajesAggF")
+    println("hemos escrito en en cassandra el viajesAggF")
+    println("hemos escrito en en cassandra el viajesAggF")
 
     //val viajesAggDateDF = viajesAggDF.withColumn(col(date.toString), "datetime")
     //val viajesAggDateDF = viajesAggDF.withColumn("datetime",expr("date.toString()"))
@@ -154,7 +199,9 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     })
 
-    cassCluster.close()
+  println("salimos del foreachRDD")
+
+  cassCluster.close()
     streamingContext.start() // Start the computation
     streamingContext.awaitTermination() // Wait for the computation to terminate
 
