@@ -71,7 +71,7 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     private val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
 
-    val streamingContext = new StreamingContext(conf, Seconds(10))
+    val streamingContext = new StreamingContext(conf, Seconds(60))
 
     val kafkaParams = Map[String, Object](
       "bootstrap.servers" -> kfkServers,
@@ -140,14 +140,14 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
     println("hemos agregado la columna con timestamp")
 
     //val viajesDateDF = viajesDF.withColumn("trip_date",to_date()expr("'"+formatted+"'"))
-    viajesDateDF.schema.printTreeString()
+    //viajesDateDF.schema.printTreeString()
     //miTimestamp
       //viajesDF.write.mode(SaveMode.Append).parquet("/tmp/parquet")
 
     println("vamos a escribir en parquet el viajesDateDF")
       viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
     //viajesDateDF.write.option("spark.sql.parquet.mergeSchema", "true").mode(SaveMode.Append).parquet(parquetDest)
-    viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
+    //viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
     println("vamos a mostrar el viajesDateDf")
 
     viajesDateDF.show()
