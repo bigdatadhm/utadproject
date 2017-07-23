@@ -55,7 +55,7 @@ object Lanzador{
     val rootLogger = Logger.getRootLogger
     rootLogger.setLevel(Level.ERROR)
 
-    val bj= new App2("127.0.0.1",9042,"localhost:9092","miGrupo","datosTaxis","hdfs://localhost:9000/user/dhm/")
+    val bj= new App2("127.0.0.1",9042,"localhost:9092","miGrupo","datosTaxis","hdfs://localhost:9000/user/dhm/datosTaxis.parquet")
   }
 }
 
@@ -71,7 +71,7 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     private val conf = new SparkConf().setAppName("kafkaStreaming").setMaster("local")
 
-    val streamingContext = new StreamingContext(conf, Seconds(60))
+    val streamingContext = new StreamingContext(conf, Seconds(10))
 
     val kafkaParams = Map[String, Object](
       "bootstrap.servers" -> kfkServers,
@@ -146,7 +146,8 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
 
     println("vamos a escribir en parquet el viajesDateDF")
       viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
-
+    //viajesDateDF.write.option("spark.sql.parquet.mergeSchema", "true").mode(SaveMode.Append).parquet(parquetDest)
+    viajesDateDF.write.mode(SaveMode.Append).parquet(parquetDest)
     println("vamos a mostrar el viajesDateDf")
 
     viajesDateDF.show()
