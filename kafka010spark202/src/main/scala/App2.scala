@@ -29,14 +29,13 @@ import com.datastax.driver.core.ResultSet
 import com.datastax.driver.core.Row
 import com.datastax.driver.core.Statement
 import java.net.URISyntaxException
-import java.util
 
 
 import org.joda.time.DateTime
 import org.joda.time.format.DateTimeFormat
 import org.joda.time.format.DateTimeFormatter
 
-
+ 
 
 import org.apache.log4j.{Level, Logger}
 
@@ -99,7 +98,7 @@ class  App2(cassNodes: String, cassPort: Int, kfkServers: String, kfkGroup: Stri
   rootLogger.setLevel(Level.ERROR)
 
     //      val rowStream =stream.map(record => (record.key, record.value))
-    val rowStream = stream.map(record => (record.value))
+    val rowStream = stream.map(record => record.value)
 
   val date = new java.util.Date
 

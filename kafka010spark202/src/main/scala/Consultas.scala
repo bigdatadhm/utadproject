@@ -45,8 +45,12 @@ class Consultas(cassNodes: String, cassPort: Int, parquetDest: String) {
 
   private val conf = new SparkConf().setAppName("moduloConsultas").setMaster("local")
 
-  val consulta1 = "select vendor_id, payment_type, count(*), sum(total_amount) from datosTaxisTBL group by vendor_id, payment_type"
-  val consulta2 = "select vendor_id, payment_type, sum(count_trips), sum(sum_total_amount) from datosTaxisTBLCass group by vendor_id, payment_type"
+  val consulta1 = "select vendor_id, payment_type, count(*), sum(total_amount) "+
+                  "from datosTaxisTBL group by vendor_id, payment_type "+
+                  "order by vendor_id, payment_type "
+  val consulta2 = "select vendor_id, payment_type, sum(count_trips), sum(sum_total_amount) "+
+                  "from datosTaxisTBLCass group by vendor_id, payment_type "+
+                  "order by vendor_id, payment_type"
 
   val sc = new SparkContext(conf)
   val sqlContext = SparkSession.builder()
