@@ -26,11 +26,11 @@ object LanzadorGeneraDatos{
     val rootLogger = Logger.getRootLogger
     rootLogger.setLevel(Level.ERROR)
 
-    val bj= new generadorDatos("localhost:9092","miGrupo","datosTaxis", "hdfs://localhost:9000/user/dhm/yellow_tripdata_2016-01.csv")
+    val bj= new generadorDatos("localhost:9092","miGrupo","datosTaxis", "hdfs://localhost:9000/user/dhm/yellow_tripdata_2016-01.csv",1)
   }
 }
 
-class generadorDatos (kfkServers: String, kfkGroup: String, kfkTopics: String, fichCsv: String) {
+class generadorDatos (kfkServers: String, kfkGroup: String, kfkTopics: String, fichCsv: String, retardo: Int) {
 
   //esta aplicación recibe como primer parámetro el bootstrap.servers de kafka
   //como segundo el grupo de kafka
@@ -66,6 +66,14 @@ class generadorDatos (kfkServers: String, kfkGroup: String, kfkTopics: String, f
   println("el open 1")
   conf.addResource(new Path("/usr/local/hadoop-2.7.3/etc/hadoop/core-site.xml"))
   val fs = FileSystem.get(conf)
+/* Lo queremos leer con spark? o no es necesario?
+
+val df=spark.read
+  .format("org.apache.spark.csv")
+  .option("header", true)
+  .option("inferSchema", true) // <-- HERE
+  .csv(fichCsv)
+
 
   println("el open 1")
   println(conf.getRaw("fs.default.name"))
@@ -75,13 +83,31 @@ class generadorDatos (kfkServers: String, kfkGroup: String, kfkTopics: String, f
   val in: FSDataInputStream = fs.open(inFile)
   println("abierto")
 
-  val registro = in.readLine().split(",")
+  val linea = in.readLine().split(",")
+  val registro = new yellowSchema(linea[])
   //println(registro)
 
   val serialized2 = gson.toJson(registro)
   println(s"Serialized ${serialized2}")
 
+  import java.util.Properties
+  import org.apache.kafka.clients.producer.{KafkaProducer, ProducerRecord}
+  import org.apache.kafka.common.serialization.StringSerializer
 
+      // Propiedades del productor
+      val config = new Properties()
+      // URL del servidor de Kafka
+  config
+      val address = kfkServers
+      config.setProperty("bootstrap.servers",address)
+      // Definimos el productor
+      val producer = new KafkaProducer[String, String](config, new StringSerializer, new StringSerializer)
+      // Mandamos un mensaje al topic test
+      producer.send(new ProducerRecord[String, String](kfkTopics,serialized2))
+        // Cerramos
+        producer.close()
+
+*/
   //val res2 = new yellowSchema(registro)
 
   //val bufferedReader = new BufferedReader(new InputStreamReader(in))
